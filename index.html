@@ -2767,392 +2767,147 @@ function mostrarBotonesWhatsAppInst() {
 
 // ══════════════════════════════════════
 // PLANNING
-// ══════════════════════════════════════
 
-let planModo = 'tecnico';
-let planVisitas = [];
-let planPinVerificado = false;
-
-function initPlanning() {
-  document.getElementById('plan-fecha').value = hoy;
-  // Por defecto arranca en modo técnico
-  if (planModo === 'oficina' && !planPinVerificado) {
-    setPlanModoSilent('tecnico');
-  }
-  if (document.getElementById('plan-visitas-lista').children.length === 0) addVisitaPlan();
-}
-
-function setPlanModoSilent(modo) {
-  planModo = modo;
-  document.getElementById('plan-btn-oficina').classList.toggle('activo', modo === 'oficina');
-  document.getElementById('plan-btn-tecnico').classList.toggle('activo', modo === 'tecnico');
-  document.getElementById('plan-vista-oficina').style.display = modo === 'oficina' ? 'block' : 'none';
-  document.getElementById('plan-selector-tecnico').style.display = modo === 'tecnico' ? 'block' : 'none';
-  document.getElementById('plan-vista-tecnico').style.display = 'none';
-}
-
-function setPlanModo(modo) {
-  if (modo === 'oficina') {
-    const pin = prompt('Introduce el PIN de oficina:');
-    if (pin !== '8888') {
-      mostrarToast('⚠️ PIN incorrecto');
-      return;
-    }
-    planPinVerificado = true;
-  }
-  planModo = modo;
-  document.getElementById('plan-btn-oficina').classList.toggle('activo', modo === 'oficina');
-  document.getElementById('plan-btn-tecnico').classList.toggle('activo', modo === 'tecnico');
-  document.getElementById('plan-vista-oficina').style.display = modo === 'oficina' ? 'block' : 'none';
-  document.getElementById('plan-selector-tecnico').style.display = modo === 'tecnico' ? 'block' : 'none';
-  document.getElementById('plan-vista-tecnico').style.display = 'none';
-  if (modo === 'oficina' && document.getElementById('plan-visitas-lista').children.length === 0) {
-    addVisitaPlan();
-  }
-}
-
-function addVisitaPlan() {
-  const lista = document.getElementById('plan-visitas-lista');
-  const idx = lista.children.length;
-  const div = document.createElement('div');
-  div.className = 'seccion';
-  div.style.marginBottom = '0';
-  div.innerHTML = `
-    <div class="seccion-titulo" style="justify-content:space-between">
-      <span>👤 Cliente ${idx + 1}</span>
-      <button onclick="this.closest('.seccion').remove()" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;opacity:0.8">✕</button>
-    </div>
-    <div class="seccion-cuerpo">
-      <div class="fila-2">
-        <div class="plan-campo-mini">
-          <label>Hora estimada</label>
-          <input type="time" class="plan-hora" placeholder="09:00">
-        </div>
-        <div class="plan-campo-mini">
-          <label>Nº Cliente</label>
-          <input type="text" class="plan-ncliente" placeholder="C0001" style="font-family:'DM Mono',monospace" oninput="this.value=this.value.toUpperCase()">
-        </div>
-      </div>
-      <div class="plan-campo-mini">
-        <label>Nombre / Razón social</label>
-        <input type="text" class="plan-nombre" placeholder="Nombre del cliente">
-      </div>
-      <div class="fila-2">
-        <div class="plan-campo-mini">
-          <label>Zona</label>
-          <input type="text" class="plan-zona" placeholder="Ej: Benijófar, San Vicente…">
-        </div>
-        <div class="plan-campo-mini">
-          <label>Teléfono</label>
-          <input type="tel" class="plan-tel" placeholder="6XX XXX XXX">
-        </div>
-      </div>
-      <div class="plan-campo-mini">
-        <label>Dirección instalación depuradora</label>
-        <input type="text" class="plan-dir" placeholder="Dirección de la depuradora">
-      </div>
-      <div class="plan-campo-mini">
-        <label>Tipo de servicio</label>
-        <div class="select-wrap">
-          <select class="plan-tipo">
-            <option value="">Seleccionar…</option>
-            <option>Mantenimiento</option>
-            <option>Revisión</option>
-            <option>Puesta en marcha</option>
-            <option>Avería</option>
-            <option>Instalación</option>
-          </select>
-        </div>
-      </div>
-      <div class="plan-campo-mini">
-        <label>Incidencia (si la hay)</label>
-        <div class="select-wrap">
-          <select class="plan-incidencia" onchange="marcarIncidencia(this)">
-            <option value="">Sin incidencia</option>
-            <option>Cliente no estaba en casa</option>
-            <option>Avisado pero ausente</option>
-            <option>Pospuesto por cliente</option>
-            <option>Avería — pendiente piezas</option>
-            <option>Acceso imposible</option>
-            <option>Otro</option>
-          </select>
-        </div>
-      </div>
-      <div class="plan-campo-mini plan-otro-wrap" style="display:none">
-        <label>Detalle incidencia</label>
-        <input type="text" class="plan-otro-txt" placeholder="Describe la incidencia…">
-      </div>
-    </div>
-  `;
-  lista.appendChild(div);
-}
-
-function marcarIncidencia(sel) {
-  const wrap = sel.closest('.seccion-cuerpo').querySelector('.plan-otro-wrap');
-  wrap.style.display = sel.value === 'Otro' ? 'block' : 'none';
-  const card = sel.closest('.seccion');
-  card.style.borderLeft = sel.value ? '4px solid #E53E3E' : '';
-}
-
-function leerVisitasDeLista() {
-  const tarjetas = document.querySelectorAll('#plan-visitas-lista .seccion');
-  return Array.from(tarjetas).map((t, i) => ({
-    orden: i + 1,
-    hora: t.querySelector('.plan-hora')?.value || '',
-    nCliente: t.querySelector('.plan-ncliente')?.value || '',
-    nombre: t.querySelector('.plan-nombre')?.value || '',
-    zona: t.querySelector('.plan-zona')?.value || '',
-    tel: t.querySelector('.plan-tel')?.value || '',
-    dir: t.querySelector('.plan-dir')?.value || '',
-    tipo: t.querySelector('.plan-tipo')?.value || '',
-    incidencia: t.querySelector('.plan-incidencia')?.value || '',
-    otroTxt: t.querySelector('.plan-otro-txt')?.value || '',
-  })).filter(v => v.nombre || v.nCliente);
-}
-
-let planEnviado = false;
-
-function guardarPlanningSheets() {
-  const fecha = document.getElementById('plan-fecha').value;
-  const equipo = document.getElementById('plan-equipo').value;
-  const tecnicos = document.getElementById('plan-tecnicos').value;
-  const visitas = leerVisitasDeLista();
-  if (!fecha || visitas.length === 0) {
-    mostrarToast('⚠️ Añade fecha y al menos un cliente');
-    return;
-  }
-  visitas.forEach(v => {
-    const params = new URLSearchParams({
-      tipo: 'PLANNING',
-      fecha, equipo, tecnicos,
-      orden: v.orden,
-      hora: v.hora,
-      nCliente: v.nCliente,
-      nombre: v.nombre,
-      zona: v.zona,
-      tel: v.tel,
-      dir: v.dir,
-      servicio: v.tipo,
-      incidencia: v.incidencia === 'Otro' ? v.otroTxt : v.incidencia,
-    });
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = SHEETS_URL + '?' + params.toString();
-    document.body.appendChild(iframe);
-    setTimeout(() => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 5000);
-  });
-  planEnviado = true;
-  mostrarToast('✅ Planning guardado');
-  // Limpiar para nuevo planning
-  setTimeout(() => {
-    document.getElementById('plan-visitas-lista').innerHTML = '';
-    document.getElementById('plan-tecnicos').value = '';
-    addVisitaPlan();
-    planEnviado = false;
-    mostrarToast('📋 Listo para nuevo planning');
-  }, 1500);
-}
-
-function enviarPlanningWhatsApp() {
-  const fecha = document.getElementById('plan-fecha').value;
-  const equipo = document.getElementById('plan-equipo').value;
-  const tecnicos = document.getElementById('plan-tecnicos').value;
-  const visitas = leerVisitasDeLista();
-  if (visitas.length === 0) { mostrarToast('⚠️ Sin clientes en el planning'); return; }
-
-  const fechaFmt = fecha ? fmtFecha(fecha) : '';
-  const equipoTxt = equipo.toUpperCase();
-  let msg = `📅 *PLANNING ${equipoTxt}* — ${fechaFmt}\n`;
-  if (tecnicos) msg += `👷 ${tecnicos}\n`;
-  msg += `─────────────────\n`;
-  visitas.forEach((v, i) => {
-    msg += `\n*${i+1}. ${v.hora ? v.hora + 'h — ' : ''}${v.nCliente ? v.nCliente + ' · ' : ''}${v.nombre}*\n`;
-    if (v.zona) msg += `📍 ${v.zona}\n`;
-    if (v.dir) msg += `🏠 ${v.dir}\n`;
-    if (v.tel) msg += `📞 ${v.tel}\n`;
-    if (v.tipo) msg += `🔧 ${v.tipo}\n`;
-    if (v.incidencia) msg += `⚠️ ${v.incidencia === 'Otro' ? v.otroTxt : v.incidencia}\n`;
-  });
-  msg += `\n─────────────────\nSIDAR · ${new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
-
-  const EQUIPOS_TEL = {
-    'Vitas': '34699248231',
-    'Equipo 1': '',
-    'Equipo 2': '',
-  };
-  const tel = EQUIPOS_TEL[equipo] || '';
-  const url = tel
-    ? `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`
-    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
-
-  // Mostrar opción de editar/reenviar
-  setTimeout(() => mostrarOpcionEditar(), 500);
-}
-
-function mostrarOpcionEditar() {
-  const existe = document.getElementById('plan-editar-banner');
-  if (existe) return;
-  const banner = document.createElement('div');
-  banner.id = 'plan-editar-banner';
-  banner.style.cssText = 'background:#FFF3CD;border:1.5px solid #FFC107;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px';
-  banner.innerHTML = `
-    <span style="font-size:13px;color:#856404;font-weight:500">✅ Planning enviado. ¿Necesitas corregir algo?</span>
-    <button onclick="editarPlanning()" style="background:#FFC107;border:none;border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:#212529">✏️ Editar</button>
-  `;
-  const lista = document.getElementById('plan-visitas-lista');
-  lista.parentElement.insertBefore(banner, lista);
-}
-
-function editarPlanning() {
-  const banner = document.getElementById('plan-editar-banner');
-  if (banner) banner.remove();
-  mostrarToast('✏️ Edita el planning y vuelve a guardar/enviar');
-}
-
-// Vista técnico — carga desde Sheets
-function verPlanningTecnico(nombre) {
-  document.getElementById('plan-selector-tecnico').style.display = 'none';
-  document.getElementById('plan-vista-tecnico').style.display = 'block';
-  document.getElementById('plan-tec-titulo').innerHTML = `<span class="icono">📅</span> Planning de ${nombre.split(' ')[0]} — hoy`;
-  const lista = document.getElementById('plan-tec-lista');
-  lista.innerHTML = '<p style="color:var(--gris);font-size:14px;text-align:center;padding:20px">⏳ Cargando planning…</p>';
-
-  const params = new URLSearchParams({ tipo: 'GET_PLANNING', fecha: hoy, tecnico: nombre });
-  fetch(SHEETS_URL + '?' + params.toString())
-    .then(r => r.json())
-    .then(data => {
-      if (!data || !data.visitas || data.visitas.length === 0) {
-        lista.innerHTML = '<p style="color:var(--gris);font-size:14px;text-align:center;padding:20px">No hay visitas asignadas para hoy.</p>';
-        return;
-      }
-      lista.innerHTML = '';
-      data.visitas.forEach(v => {
-        const incidenciaHtml = v.incidencia
-          ? `<div class="visita-incidencia-txt">⚠️ ${v.incidencia}</div>` : '';
-        const div = document.createElement('div');
-        div.className = 'visita-card' + (v.incidencia ? ' incidencia' : '');
-        div.innerHTML = `
-          <div class="visita-header">
-            ${v.hora ? `<span class="visita-hora">${v.hora}h</span>` : ''}
-            ${v.nCliente ? `<span class="visita-num">${v.nCliente}</span>` : ''}
-            <span class="visita-nombre">${v.nombre || ''}</span>
-          </div>
-          ${v.zona ? `<div class="visita-zona">📍 ${v.zona}</div>` : ''}
-          ${v.dir ? `<div class="visita-dir">${v.dir}</div>` : ''}
-          ${v.tel ? `<div class="visita-tipo">📞 ${v.tel}</div>` : ''}
-          ${v.tipo ? `<div class="visita-tipo">🔧 ${v.tipo}</div>` : ''}
-          ${incidenciaHtml}
-        `;
-        lista.appendChild(div);
-      });
-    })
-    .catch(() => {
-      lista.innerHTML = '<p style="color:var(--rojo);font-size:14px;text-align:center;padding:20px">⚠️ No se pudo cargar el planning. Comprueba la conexión.</p>';
-    });
-}
-
-function volverSelectorTecnico() {
-  document.getElementById('plan-vista-tecnico').style.display = 'none';
-  document.getElementById('plan-selector-tecnico').style.display = 'block';
-}
-
-</script>
-<style>
-@keyframes slideIn {
-  from { opacity:0; transform:translateX(60px); }
-  to   { opacity:1; transform:translateX(0); }
-}
-</style>
-</body>
-</html>
-<!-- ══════════════════════════════════════ -->
-<!-- MODO PLANNING -->
-<!-- ══════════════════════════════════════ -->
 <div id="modo-planning" style="display:none">
 <div class="contenido">
 
-  <!-- SELECTOR TÉCNICO (vista técnico) -->
-  <div id="plan-selector-tecnico" style="display:none">
+  <!-- ── VISTA TÉCNICO ── -->
+  <div id="plan-vista-tecnico-selector">
     <div class="seccion">
       <div class="seccion-titulo"><span class="icono">👷</span> ¿Quién eres?</div>
       <div class="seccion-cuerpo">
-        <p style="font-size:13px;color:var(--gris);margin-bottom:14px">Toca tu nombre para ver tu planning del día.</p>
+        <p style="font-size:13px;color:var(--gris);margin-bottom:14px">Toca tu nombre para ver tu planning de hoy.</p>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <button class="btn-tecnico-plan" onclick="verPlanningTecnico('Javier Gallego')">👷 Javier Gallego</button>
-          <button class="btn-tecnico-plan" onclick="verPlanningTecnico('Carlos Hernández')">👷 Carlos Hernández</button>
-          <button class="btn-tecnico-plan" onclick="verPlanningTecnico('Adriel Delgado')">👷 Adriel Delgado</button>
-          <button class="btn-tecnico-plan" onclick="verPlanningTecnico('Vytautas Baltrukevicius')">👷 Vytautas (Vitas)</button>
+          <button class="btn-tecnico-plan" onclick="verPlanTecnico('Javier Gallego')">👷 Javier Gallego</button>
+          <button class="btn-tecnico-plan" onclick="verPlanTecnico('Carlos Hernández')">👷 Carlos Hernández</button>
+          <button class="btn-tecnico-plan" onclick="verPlanTecnico('Adriel Delgado')">👷 Adriel Delgado</button>
+          <button class="btn-tecnico-plan" onclick="verPlanTecnico('Vytautas Baltrukevicius')">👷 Vytautas (Vitas)</button>
         </div>
+        <button onclick="setPlanModo('oficina')" style="margin-top:20px;width:100%;padding:10px;background:none;border:1.5px solid var(--gris-claro);border-radius:10px;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">🏢 Acceso oficina</button>
       </div>
     </div>
   </div>
 
-  <!-- VISTA TÉCNICO: su planning del día -->
-  <div id="plan-vista-tecnico" style="display:none">
+  <!-- ── VISTA TÉCNICO: su lista del día ── -->
+  <div id="plan-vista-tecnico-lista" style="display:none">
     <div class="seccion">
       <div class="seccion-titulo" id="plan-tec-titulo"><span class="icono">📅</span> Tu planning de hoy</div>
       <div class="seccion-cuerpo">
-        <div id="plan-tec-lista" style="display:flex;flex-direction:column;gap:12px"></div>
-        <button onclick="volverSelectorTecnico()" style="margin-top:16px;width:100%;padding:10px;background:none;border:1.5px solid var(--gris-claro);border-radius:10px;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer">← Cambiar técnico</button>
+        <div id="plan-tec-lista"></div>
+        <button onclick="volverSelectorTecnicoPlan()" style="margin-top:16px;width:100%;padding:10px;background:none;border:1.5px solid var(--gris-claro);border-radius:10px;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer">← Cambiar técnico</button>
       </div>
     </div>
   </div>
 
-  <!-- VISTA OFICINA -->
-  <div id="plan-vista-oficina">
+  <!-- ── VISTA OFICINA ── -->
+  <div id="plan-vista-oficina" style="display:none">
 
-    <!-- Selector modo -->
-    <div class="seccion">
-      <div class="seccion-titulo"><span class="icono">🏢</span> Modo</div>
-      <div class="seccion-cuerpo">
-        <div style="display:flex;gap:10px">
-          <button class="tipo-btn activo" id="plan-btn-oficina" onclick="setPlanModo('oficina')">🏢 Oficina</button>
-          <button class="tipo-btn" id="plan-btn-tecnico" onclick="setPlanModo('tecnico')">👷 Soy técnico</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Fecha y equipo -->
-    <div class="seccion">
-      <div class="seccion-titulo"><span class="icono">📅</span> Fecha y Equipo</div>
-      <div class="seccion-cuerpo">
-        <div class="fila-2">
+    <!-- Paso 1: Fecha -->
+    <div id="plan-paso1" class="plan-paso">
+      <div class="seccion">
+        <div class="seccion-titulo"><span class="icono">📅</span> Paso 1 — Fecha del planning</div>
+        <div class="seccion-cuerpo">
           <div class="campo">
             <label>Fecha</label>
             <input type="date" id="plan-fecha">
           </div>
-          <div class="campo">
-            <label>Equipo</label>
-            <div class="select-wrap">
-              <select id="plan-equipo">
-                <option value="Equipo 1">Equipo 1</option>
-                <option value="Equipo 2">Equipo 2</option>
-                <option value="Vitas">Vitas</option>
-              </select>
+          <button class="btn-plan-siguiente" onclick="planPaso(2)">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 2: Equipos -->
+    <div id="plan-paso2" class="plan-paso" style="display:none">
+      <div class="seccion">
+        <div class="seccion-titulo"><span class="icono">👥</span> Paso 2 — Equipos del día</div>
+        <div class="seccion-cuerpo">
+
+          <!-- Equipo 1 -->
+          <div class="plan-equipo-bloque" id="bloque-eq1">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <span style="font-weight:700;color:var(--azul);font-size:15px">🔵 Equipo 1</span>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gris)">
+                <input type="checkbox" id="eq1-activo" checked onchange="toggleEquipo('eq1')"> Activo hoy
+              </label>
+            </div>
+            <div class="plan-campo-mini">
+              <label>Técnicos</label>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="display:flex;align-items:center;gap:8px;font-size:14px;text-transform:none;letter-spacing:0"><input type="checkbox" class="eq1-tec" value="Javier Gallego"> Javier Gallego</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:14px;text-transform:none;letter-spacing:0"><input type="checkbox" class="eq1-tec" value="Carlos Hernández"> Carlos Hernández</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:14px;text-transform:none;letter-spacing:0"><input type="checkbox" class="eq1-tec" value="Adriel Delgado"> Adriel Delgado</label>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="campo">
-          <label>Técnicos del equipo</label>
-          <input type="text" id="plan-tecnicos" placeholder="Ej: Javier + Adriel">
+
+          <hr style="border:none;border-top:1px solid var(--gris-claro);margin:14px 0">
+
+          <!-- Equipo 2 -->
+          <div class="plan-equipo-bloque" id="bloque-eq2">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <span style="font-weight:700;color:#6B46C1;font-size:15px">🟣 Equipo 2</span>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gris)">
+                <input type="checkbox" id="eq2-activo" onchange="toggleEquipo('eq2')"> Activo hoy
+              </label>
+            </div>
+            <div class="plan-campo-mini" id="eq2-tecs" style="display:none">
+              <label>Técnicos</label>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="display:flex;align-items:center;gap:8px;font-size:14px;text-transform:none;letter-spacing:0"><input type="checkbox" class="eq2-tec" value="Javier Gallego"> Javier Gallego</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:14px;text-transform:none;letter-spacing:0"><input type="checkbox" class="eq2-tec" value="Carlos Hernández"> Carlos Hernández</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:14px;text-transform:none;letter-spacing:0"><input type="checkbox" class="eq2-tec" value="Adriel Delgado"> Adriel Delgado</label>
+              </div>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--gris-claro);margin:14px 0">
+
+          <!-- Vitas -->
+          <div class="plan-equipo-bloque" id="bloque-vitas">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <span style="font-weight:700;color:#2F855A;font-size:15px">🟢 Vitas</span>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gris)">
+                <input type="checkbox" id="vitas-activo" onchange="toggleEquipo('vitas')"> Activo hoy
+              </label>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <button class="btn-plan-back" onclick="planPaso(1)">← Atrás</button>
+            <button class="btn-plan-siguiente" onclick="planPaso(3)" style="flex:1">Siguiente →</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Lista de visitas -->
-    <div class="seccion">
-      <div class="seccion-titulo"><span class="icono">🗂️</span> Visitas del día</div>
-      <div class="seccion-cuerpo">
-        <div id="plan-visitas-lista" style="display:flex;flex-direction:column;gap:12px"></div>
-        <button class="btn-add-mat" onclick="addVisitaPlan()" style="margin-top:14px">＋ Añadir cliente</button>
+    <!-- Paso 3: Clientes por equipo -->
+    <div id="plan-paso3" class="plan-paso" style="display:none">
+      <div id="plan-equipos-container"></div>
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <button class="btn-plan-back" onclick="planPaso(2)">← Atrás</button>
+        <button class="btn-plan-siguiente" onclick="planPaso(4)" style="flex:1">Siguiente →</button>
       </div>
     </div>
 
-    <!-- Botones acción -->
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-      <button onclick="guardarPlanningSheets()" style="width:100%;padding:14px;background:var(--azul);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer">💾 Guardar planning</button>
-      <button onclick="enviarPlanningWhatsApp()" style="width:100%;padding:14px;background:#25D366;color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer">📲 Enviar por WhatsApp</button>
+    <!-- Paso 4: Resumen y acciones -->
+    <div id="plan-paso4" class="plan-paso" style="display:none">
+      <div class="seccion">
+        <div class="seccion-titulo"><span class="icono">✅</span> Paso 4 — Resumen y envío</div>
+        <div class="seccion-cuerpo">
+          <div id="plan-resumen"></div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+            <button onclick="generarPDFResumenDia()" style="width:100%;padding:14px;background:var(--azul);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer">📄 PDF resumen del día (oficina)</button>
+            <div id="plan-btns-equipos"></div>
+            <button onclick="guardarPlanningNuevo()" style="width:100%;padding:14px;background:#48BB78;color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer">💾 Guardar en Sheets</button>
+            <button onclick="editarPlanning()" style="width:100%;padding:10px;background:none;border:1.5px solid #FFC107;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:#856404;cursor:pointer">✏️ Editar planning</button>
+            <button onclick="nuevoPlanningDia()" style="width:100%;padding:10px;background:none;border:1.5px solid var(--gris-claro);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--gris);cursor:pointer">🗑️ Nuevo planning</button>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:10px">
+            <button class="btn-plan-back" onclick="planPaso(3)">← Editar clientes</button>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div><!-- /plan-vista-oficina -->
@@ -3168,21 +2923,41 @@ function volverSelectorTecnico() {
   color:var(--azul);cursor:pointer;text-align:left;transition:all 0.2s;
 }
 .btn-tecnico-plan:active { background:rgba(58,171,181,0.12); }
-
+.plan-paso { animation: slideIn 0.2s ease; }
+.btn-plan-siguiente {
+  width:100%;padding:14px;background:var(--azul);color:white;border:none;
+  border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;
+}
+.btn-plan-back {
+  padding:12px 18px;background:none;border:1.5px solid var(--gris-claro);
+  border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--gris);cursor:pointer;
+}
+.plan-equipo-bloque { padding:4px 0; }
+.plan-campo-mini { margin-bottom:10px; }
+.plan-campo-mini label {
+  display:block;font-size:10px;font-weight:600;color:var(--gris);
+  letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;
+}
+.plan-campo-mini input[type=text], .plan-campo-mini input[type=time],
+.plan-campo-mini input[type=tel], .plan-campo-mini select {
+  width:100%;border:1.5px solid var(--gris-claro);border-radius:8px;
+  padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;
+  color:var(--texto);background:white;outline:none;-webkit-appearance:none;box-sizing:border-box;
+}
+.plan-campo-mini input:focus, .plan-campo-mini select:focus { border-color:var(--azul-claro); }
+.plan-cliente-card {
+  border:1.5px solid var(--gris-claro);border-radius:12px;padding:14px;margin-bottom:12px;background:white;
+}
+.plan-cliente-card.incidencia { border-color:#E53E3E; }
 .visita-card {
-  background:var(--fondo);border:1.5px solid var(--gris-claro);border-radius:12px;padding:14px;
+  background:var(--fondo);border:1.5px solid var(--gris-claro);border-radius:12px;padding:14px;margin-bottom:10px;
 }
 .visita-card.incidencia { border-color:#E53E3E;background:#fff5f5; }
-.visita-header {
-  display:flex;align-items:center;gap:10px;margin-bottom:10px;
-}
 .visita-num {
   font-family:'DM Mono',monospace;font-size:12px;font-weight:600;
   background:var(--azul-medio);color:white;padding:3px 10px;border-radius:20px;
 }
-.visita-hora {
-  font-family:'DM Mono',monospace;font-size:13px;color:var(--gris);
-}
+.visita-hora { font-family:'DM Mono',monospace;font-size:13px;color:var(--gris); }
 .visita-nombre { font-size:15px;font-weight:600;color:var(--texto);flex:1; }
 .visita-zona { font-size:12px;color:var(--azul-medio);font-weight:600;margin-bottom:4px; }
 .visita-dir { font-size:13px;color:var(--gris);margin-bottom:6px; }
@@ -3191,17 +2966,488 @@ function volverSelectorTecnico() {
   font-size:13px;color:#E53E3E;font-weight:500;margin-top:6px;
   padding:6px 10px;background:rgba(229,62,62,0.08);border-radius:8px;
 }
-
-/* Campos dentro de la tarjeta de edición */
-.plan-campo-mini { margin-bottom:10px; }
-.plan-campo-mini label {
-  display:block;font-size:10px;font-weight:600;color:var(--gris);
-  letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;
+@keyframes slideIn {
+  from { opacity:0; transform:translateX(30px); }
+  to   { opacity:1; transform:translateX(0); }
 }
-.plan-campo-mini input, .plan-campo-mini select, .plan-campo-mini textarea {
-  width:100%;border:1.5px solid var(--gris-claro);border-radius:8px;
-  padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;
-  color:var(--texto);background:white;outline:none;-webkit-appearance:none;
-}
-.plan-campo-mini input:focus, .plan-campo-mini select:focus { border-color:var(--azul-claro); }
 </style>
+
+<script>
+// ══════════════════════════════════════
+// PLANNING NUEVO
+// ══════════════════════════════════════
+
+let planDatos = {
+  fecha: '',
+  equipos: {
+    eq1: { activo: true, tecnicos: [], clientes: [] },
+    eq2: { activo: false, tecnicos: [], clientes: [] },
+    vitas: { activo: false, tecnicos: ['Vytautas Baltrukevicius'], clientes: [] }
+  }
+};
+let planPinOk = false;
+let planConsecutivo = 1;
+
+function initPlanning() {
+  document.getElementById('plan-fecha').value = hoy;
+}
+
+function setPlanModo(modo) {
+  if (modo === 'oficina') {
+    const pin = prompt('PIN de oficina:');
+    if (pin !== '8888') { mostrarToast('⚠️ PIN incorrecto'); return; }
+    planPinOk = true;
+    document.getElementById('plan-vista-tecnico-selector').style.display = 'none';
+    document.getElementById('plan-vista-tecnico-lista').style.display = 'none';
+    document.getElementById('plan-vista-oficina').style.display = 'block';
+    planPaso(1);
+  } else {
+    document.getElementById('plan-vista-oficina').style.display = 'none';
+    document.getElementById('plan-vista-tecnico-lista').style.display = 'none';
+    document.getElementById('plan-vista-tecnico-selector').style.display = 'block';
+  }
+}
+
+function planPaso(n) {
+  [1,2,3,4].forEach(i => {
+    const el = document.getElementById('plan-paso' + i);
+    if (el) el.style.display = i === n ? 'block' : 'none';
+  });
+  if (n === 3) renderClientesPorEquipo();
+  if (n === 4) renderResumen();
+}
+
+function toggleEquipo(eq) {
+  const activo = document.getElementById(eq + '-activo').checked;
+  if (eq === 'eq1' || eq === 'eq2') {
+    const tecs = document.getElementById(eq + '-tecs');
+    if (tecs) tecs.style.display = activo ? 'block' : 'none';
+  }
+}
+
+function getTecnicosEquipo(eq) {
+  if (eq === 'vitas') return ['Vytautas (Vitas)'];
+  const checks = document.querySelectorAll('.' + eq + '-tec:checked');
+  return Array.from(checks).map(c => c.value);
+}
+
+function renderClientesPorEquipo() {
+  const container = document.getElementById('plan-equipos-container');
+  container.innerHTML = '';
+  const equipos = [
+    { id: 'eq1', nombre: 'Equipo 1', color: 'var(--azul)', emoji: '🔵' },
+    { id: 'eq2', nombre: 'Equipo 2', color: '#6B46C1', emoji: '🟣' },
+    { id: 'vitas', nombre: 'Vitas', color: '#2F855A', emoji: '🟢' },
+  ];
+  equipos.forEach(eq => {
+    const activo = document.getElementById(eq.id + '-activo')?.checked;
+    if (!activo) return;
+    const tecnicos = getTecnicosEquipo(eq.id);
+    const div = document.createElement('div');
+    div.className = 'seccion';
+    div.innerHTML = `
+      <div class="seccion-titulo" style="background:${eq.color}">
+        <span class="icono">${eq.emoji}</span> ${eq.nombre}
+        <span style="font-size:12px;font-weight:400;opacity:0.85">${tecnicos.join(' + ') || '—'}</span>
+      </div>
+      <div class="seccion-cuerpo">
+        <div id="clientes-${eq.id}"></div>
+        <button onclick="addClientePlan('${eq.id}')" class="btn-add-mat" style="margin-top:8px">＋ Añadir cliente</button>
+      </div>
+    `;
+    container.appendChild(div);
+    // Restaurar clientes si ya había
+    if (planDatos.equipos[eq.id].clientes.length === 0) addClientePlan(eq.id);
+    else planDatos.equipos[eq.id].clientes.forEach((c, i) => addClientePlan(eq.id, c));
+  });
+}
+
+function addClientePlan(eq, datos = {}) {
+  const lista = document.getElementById('clientes-' + eq);
+  if (!lista) return;
+  const idx = lista.children.length + 1;
+  const div = document.createElement('div');
+  div.className = 'plan-cliente-card';
+  div.dataset.eq = eq;
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-weight:700;font-size:14px;color:var(--azul-medio)">Cliente ${idx}</span>
+      <button onclick="this.closest('.plan-cliente-card').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gris)">✕</button>
+    </div>
+    <div class="fila-2">
+      <div class="plan-campo-mini">
+        <label>Hora</label>
+        <input type="time" class="pc-hora" value="${datos.hora||''}">
+      </div>
+      <div class="plan-campo-mini">
+        <label>Nº Cliente</label>
+        <input type="text" class="pc-num" placeholder="C0001" value="${datos.nCliente||''}" 
+          style="font-family:'DM Mono',monospace;text-transform:uppercase"
+          oninput="this.value=this.value.toUpperCase();buscarClientePlan(this)">
+      </div>
+    </div>
+    <div class="plan-campo-mini">
+      <label>Nombre cliente</label>
+      <input type="text" class="pc-nombre" placeholder="Se rellena al buscar o escribe" value="${datos.nombre||''}">
+    </div>
+    <div class="fila-2">
+      <div class="plan-campo-mini">
+        <label>Zona</label>
+        <input type="text" class="pc-zona" placeholder="Benijófar, San Vicente…" value="${datos.zona||''}">
+      </div>
+      <div class="plan-campo-mini">
+        <label>Teléfono</label>
+        <input type="tel" class="pc-tel" placeholder="6XX XXX XXX" value="${datos.tel||''}">
+      </div>
+    </div>
+    <div class="plan-campo-mini">
+      <label>Dirección depuradora</label>
+      <input type="text" class="pc-dir" placeholder="Dirección de la instalación" value="${datos.dir||''}">
+    </div>
+    <div class="plan-campo-mini">
+      <label>Tipo de servicio</label>
+      <div class="select-wrap">
+        <select class="pc-tipo">
+          <option value="">Seleccionar…</option>
+          <option ${datos.tipo==='Mantenimiento'?'selected':''}>Mantenimiento</option>
+          <option ${datos.tipo==='Revisión'?'selected':''}>Revisión</option>
+          <option ${datos.tipo==='Puesta en marcha'?'selected':''}>Puesta en marcha</option>
+          <option ${datos.tipo==='Avería'?'selected':''}>Avería</option>
+          <option ${datos.tipo==='Instalación'?'selected':''}>Instalación</option>
+        </select>
+      </div>
+    </div>
+    <div class="plan-campo-mini">
+      <label>Incidencia</label>
+      <div class="select-wrap">
+        <select class="pc-incidencia" onchange="toggleOtroIncid(this)">
+          <option value="">Sin incidencia</option>
+          <option ${datos.incidencia==='Cliente no estaba en casa'?'selected':''}>Cliente no estaba en casa</option>
+          <option ${datos.incidencia==='Avisado pero ausente'?'selected':''}>Avisado pero ausente</option>
+          <option ${datos.incidencia==='Pospuesto por cliente'?'selected':''}>Pospuesto por cliente</option>
+          <option ${datos.incidencia==='Avería — pendiente piezas'?'selected':''}>Avería — pendiente piezas</option>
+          <option ${datos.incidencia==='Acceso imposible'?'selected':''}>Acceso imposible</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="plan-campo-mini pc-otro-wrap" style="display:none">
+      <label>Detalle</label>
+      <input type="text" class="pc-otro" placeholder="Describe la incidencia…" value="${datos.otroTxt||''}">
+    </div>
+  `;
+  lista.appendChild(div);
+}
+
+function toggleOtroIncid(sel) {
+  const wrap = sel.closest('.plan-cliente-card').querySelector('.pc-otro-wrap');
+  wrap.style.display = sel.value === 'Otro' ? 'block' : 'none';
+}
+
+async function buscarClientePlan(input) {
+  const num = input.value.trim();
+  if (num.length < 4) return;
+  const card = input.closest('.plan-cliente-card');
+  try {
+    const params = new URLSearchParams({ tipo: 'GET_CLIENTE', nCliente: num });
+    const res = await fetch(SHEETS_URL + '?' + params.toString());
+    const data = await res.json();
+    if (data && data.nombre) {
+      card.querySelector('.pc-nombre').value = data.nombre || '';
+      card.querySelector('.pc-tel').value = data.tel || '';
+      card.querySelector('.pc-dir').value = data.dirInstalacion || data.dir || '';
+      card.querySelector('.pc-zona').value = data.zona || '';
+      mostrarToast('✅ Cliente encontrado');
+    }
+  } catch(e) {
+    // Si no hay conexión o no está en Sheets, el usuario rellena manual
+  }
+}
+
+function leerClientesEquipo(eq) {
+  const cards = document.querySelectorAll(`#clientes-${eq} .plan-cliente-card`);
+  return Array.from(cards).map((c, i) => {
+    const incid = c.querySelector('.pc-incidencia')?.value || '';
+    const otro = c.querySelector('.pc-otro')?.value || '';
+    return {
+      orden: i + 1,
+      hora: c.querySelector('.pc-hora')?.value || '',
+      nCliente: c.querySelector('.pc-num')?.value || '',
+      nombre: c.querySelector('.pc-nombre')?.value || '',
+      zona: c.querySelector('.pc-zona')?.value || '',
+      tel: c.querySelector('.pc-tel')?.value || '',
+      dir: c.querySelector('.pc-dir')?.value || '',
+      tipo: c.querySelector('.pc-tipo')?.value || '',
+      incidencia: incid === 'Otro' ? otro : incid,
+    };
+  }).filter(c => c.nombre || c.nCliente);
+}
+
+function renderResumen() {
+  const fecha = document.getElementById('plan-fecha').value;
+  const fechaFmt = fmtFecha(fecha);
+  const resumen = document.getElementById('plan-resumen');
+  const btnEquipos = document.getElementById('plan-btns-equipos');
+  resumen.innerHTML = '';
+  btnEquipos.innerHTML = '';
+
+  const equipos = [
+    { id: 'eq1', nombre: 'Equipo 1', color: '#2A7A82', emoji: '🔵' },
+    { id: 'eq2', nombre: 'Equipo 2', color: '#6B46C1', emoji: '🟣' },
+    { id: 'vitas', nombre: 'Vitas', color: '#2F855A', emoji: '🟢' },
+  ];
+
+  let totalVisitas = 0;
+  equipos.forEach(eq => {
+    const activo = document.getElementById(eq.id + '-activo')?.checked;
+    if (!activo) return;
+    const tecnicos = getTecnicosEquipo(eq.id);
+    const clientes = leerClientesEquipo(eq.id);
+    totalVisitas += clientes.length;
+    planDatos.equipos[eq.id].clientes = clientes;
+
+    // Bloque resumen
+    const div = document.createElement('div');
+    div.style.cssText = 'border:1.5px solid #E2E8F0;border-radius:12px;margin-bottom:12px;overflow:hidden';
+    div.innerHTML = `
+      <div style="background:${eq.color};color:white;padding:10px 14px;font-weight:700;font-size:14px">
+        ${eq.emoji} ${eq.nombre} · ${tecnicos.join(' + ') || '—'} · ${clientes.length} visitas
+      </div>
+      <div style="padding:10px 14px">
+        ${clientes.map((c, i) => `
+          <div style="padding:6px 0;border-bottom:1px solid #F0F0F0;font-size:13px">
+            <span style="font-family:monospace;color:${eq.color};font-weight:600">${c.hora ? c.hora+'h ' : ''}${c.nCliente}</span>
+            · ${c.nombre} ${c.zona ? '· '+c.zona : ''}
+            ${c.incidencia ? `<span style="color:#E53E3E;font-size:12px"> ⚠️ ${c.incidencia}</span>` : ''}
+          </div>
+        `).join('') || '<p style="color:#999;font-size:13px">Sin clientes</p>'}
+      </div>
+    `;
+    resumen.appendChild(div);
+
+    // Botón WhatsApp por equipo
+    if (clientes.length > 0) {
+      const btn = document.createElement('button');
+      btn.style.cssText = `width:100%;padding:12px;background:#25D366;color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px`;
+      btn.innerHTML = `📲 Enviar a ${eq.nombre} por WhatsApp`;
+      btn.onclick = () => enviarPlanEquipoWhatsApp(eq.id, eq.nombre, tecnicos, clientes, fechaFmt);
+      btnEquipos.appendChild(btn);
+    }
+  });
+
+  // Info total
+  const info = document.createElement('div');
+  info.style.cssText = 'background:var(--fondo);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--gris)';
+  info.innerHTML = `📅 <strong>${fechaFmt}</strong> · Total: <strong>${totalVisitas} visitas</strong>`;
+  resumen.insertBefore(info, resumen.firstChild);
+}
+
+function enviarPlanEquipoWhatsApp(eqId, eqNombre, tecnicos, clientes, fechaFmt) {
+  let msg = `📅 *PLANNING ${eqNombre.toUpperCase()}* — ${fechaFmt}\n`;
+  if (tecnicos.length) msg += `👷 ${tecnicos.join(' + ')}\n`;
+  msg += `─────────────────\n`;
+  clientes.forEach((c, i) => {
+    msg += `\n*${i+1}. ${c.hora ? c.hora+'h — ' : ''}${c.nCliente ? c.nCliente+' · ' : ''}${c.nombre}*\n`;
+    if (c.zona) msg += `📍 ${c.zona}\n`;
+    if (c.dir) msg += `🏠 ${c.dir}\n`;
+    if (c.tel) msg += `📞 ${c.tel}\n`;
+    if (c.tipo) msg += `🔧 ${c.tipo}\n`;
+    if (c.incidencia) msg += `⚠️ ${c.incidencia}\n`;
+  });
+  msg += `\n─────────────────\nSIDAR · ${new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+
+  const telVitas = '34699248231';
+  const tel = eqId === 'vitas' ? telVitas : '';
+  const url = tel ? `https://wa.me/${tel}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+function generarPDFResumenDia() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const fecha = document.getElementById('plan-fecha').value;
+  const fechaFmt = fmtFecha(fecha);
+
+  // Nombre PDF con consecutivo
+  const mes = fecha ? new Date(fecha+'T12:00:00').toLocaleString('es-ES',{month:'short'}) : '';
+  const anyo = fecha ? fecha.split('-')[0].slice(2) : '';
+  const dia = fecha ? fecha.split('-')[2] : '';
+  const numConsec = String(planConsecutivo).padStart(2,'0');
+  const nombrePDF = `Planning_${dia} ${mes}_${anyo}_${numConsec}`;
+
+  const AZUL = [42, 122, 130];
+  const W = 210, mg = 14;
+  let y = 14;
+
+  // Cabecera
+  doc.setFillColor(...AZUL);
+  doc.rect(0, 0, W, 22, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.text('SIDAR — Planning diario', mg, 10);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.text(fechaFmt, W - mg, 10, { align: 'right' });
+  doc.text(nombrePDF, mg, 16);
+  doc.setTextColor(0,0,0);
+  y = 28;
+
+  const equipos = [
+    { id: 'eq1', nombre: 'Equipo 1', color: [42,122,130] },
+    { id: 'eq2', nombre: 'Equipo 2', color: [107,70,193] },
+    { id: 'vitas', nombre: 'Vitas', color: [47,133,90] },
+  ];
+
+  equipos.forEach(eq => {
+    const activo = document.getElementById(eq.id + '-activo')?.checked;
+    if (!activo) return;
+    const tecnicos = getTecnicosEquipo(eq.id);
+    const clientes = leerClientesEquipo(eq.id);
+    if (clientes.length === 0) return;
+
+    if (y > 260) { doc.addPage(); y = 14; }
+
+    // Header equipo
+    doc.setFillColor(...eq.color);
+    doc.rect(mg, y, W - mg*2, 8, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.text(`${eq.nombre} — ${tecnicos.join(' + ') || '—'}`, mg + 3, y + 5.5);
+    doc.setTextColor(0,0,0);
+    y += 11;
+
+    clientes.forEach((c, i) => {
+      if (y > 265) { doc.addPage(); y = 14; }
+      doc.setFillColor(i%2===0?245:255, i%2===0?250:255, i%2===0?251:255);
+      doc.rect(mg, y, W-mg*2, 16, 'F');
+      doc.setDrawColor(220,220,220);
+      doc.rect(mg, y, W-mg*2, 16, 'S');
+
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...eq.color);
+      doc.text(`${c.hora ? c.hora+'h' : '  '} ${c.nCliente}`, mg+2, y+5);
+      doc.setTextColor(0,0,0);
+      doc.setFont('helvetica','bold');
+      doc.text(c.nombre || '—', mg+30, y+5);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(80,80,80);
+      doc.text(`${c.zona ? '📍 '+c.zona : ''}  ${c.tipo ? '🔧 '+c.tipo : ''}`, mg+2, y+10);
+      doc.text(c.dir || '', mg+2, y+14.5);
+      if (c.incidencia) {
+        doc.setTextColor(220,53,69);
+        doc.text('⚠️ '+c.incidencia, W-mg-2, y+5, {align:'right'});
+        doc.setTextColor(0,0,0);
+      }
+      y += 18;
+    });
+    y += 4;
+  });
+
+  // Pie
+  doc.setFontSize(8);
+  doc.setTextColor(150,150,150);
+  doc.text(`SIDAR · ${nombrePDF} · Generado ${new Date().toLocaleString('es-ES')}`, W/2, 290, {align:'center'});
+
+  doc.save(nombrePDF + '.pdf');
+  planConsecutivo++;
+  mostrarToast('✅ PDF guardado');
+}
+
+function guardarPlanningNuevo() {
+  const fecha = document.getElementById('plan-fecha').value;
+  if (!fecha) { mostrarToast('⚠️ Falta la fecha'); return; }
+
+  const equipos = ['eq1','eq2','vitas'];
+  const nombresEq = { eq1:'Equipo 1', eq2:'Equipo 2', vitas:'Vitas' };
+  let total = 0;
+
+  equipos.forEach(eq => {
+    const activo = document.getElementById(eq + '-activo')?.checked;
+    if (!activo) return;
+    const tecnicos = getTecnicosEquipo(eq);
+    const clientes = leerClientesEquipo(eq);
+    clientes.forEach(c => {
+      total++;
+      const params = new URLSearchParams({
+        tipo: 'PLANNING',
+        fecha, equipo: nombresEq[eq],
+        tecnicos: tecnicos.join(', '),
+        orden: c.orden, hora: c.hora,
+        nCliente: c.nCliente, nombre: c.nombre,
+        zona: c.zona, tel: c.tel, dir: c.dir,
+        servicio: c.tipo, incidencia: c.incidencia,
+      });
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = SHEETS_URL + '?' + params.toString();
+      document.body.appendChild(iframe);
+      setTimeout(() => iframe.parentNode?.removeChild(iframe), 5000);
+    });
+  });
+
+  mostrarToast(`✅ ${total} visitas guardadas en Sheets`);
+}
+
+function nuevoPlanningDia() {
+  if (!confirm('¿Crear un planning nuevo? Se perderán los datos actuales.')) return;
+  planDatos.equipos.eq1.clientes = [];
+  planDatos.equipos.eq2.clientes = [];
+  planDatos.equipos.vitas.clientes = [];
+  planPaso(1);
+  document.getElementById('plan-fecha').value = hoy;
+}
+
+function editarPlanning() {
+  planPaso(3);
+}
+
+function verPlanTecnico(nombre) {
+  document.getElementById('plan-vista-tecnico-selector').style.display = 'none';
+  document.getElementById('plan-vista-tecnico-lista').style.display = 'block';
+  document.getElementById('plan-tec-titulo').innerHTML = `<span class="icono">📅</span> Planning de ${nombre.split(' ')[0]} — hoy`;
+  const lista = document.getElementById('plan-tec-lista');
+  lista.innerHTML = '<p style="color:var(--gris);font-size:14px;text-align:center;padding:20px">⏳ Cargando…</p>';
+
+  const params = new URLSearchParams({ tipo: 'GET_PLANNING', fecha: hoy, tecnico: nombre });
+  fetch(SHEETS_URL + '?' + params.toString())
+    .then(r => r.json())
+    .then(data => {
+      if (!data?.visitas?.length) {
+        lista.innerHTML = '<p style="color:var(--gris);font-size:14px;text-align:center;padding:20px">No hay visitas para hoy.</p>';
+        return;
+      }
+      lista.innerHTML = '';
+      data.visitas.forEach(v => {
+        const div = document.createElement('div');
+        div.className = 'visita-card' + (v.incidencia ? ' incidencia' : '');
+        div.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            ${v.hora ? `<span class="visita-hora">${v.hora}h</span>` : ''}
+            ${v.nCliente ? `<span class="visita-num">${v.nCliente}</span>` : ''}
+            <span class="visita-nombre">${v.nombre || ''}</span>
+          </div>
+          ${v.zona ? `<div class="visita-zona">📍 ${v.zona}</div>` : ''}
+          ${v.dir ? `<div class="visita-dir">${v.dir}</div>` : ''}
+          ${v.tel ? `<div class="visita-tipo">📞 ${v.tel}</div>` : ''}
+          ${v.tipo ? `<div class="visita-tipo">🔧 ${v.tipo}</div>` : ''}
+          ${v.incidencia ? `<div class="visita-incidencia-txt">⚠️ ${v.incidencia}</div>` : ''}
+        `;
+        lista.appendChild(div);
+      });
+    })
+    .catch(() => {
+      lista.innerHTML = '<p style="color:#E53E3E;font-size:14px;text-align:center;padding:20px">⚠️ Sin conexión.</p>';
+    });
+}
+
+function volverSelectorTecnicoPlan() {
+  document.getElementById('plan-vista-tecnico-lista').style.display = 'none';
+  document.getElementById('plan-vista-tecnico-selector').style.display = 'block';
+}
+</script>
+</body>
+</html>
