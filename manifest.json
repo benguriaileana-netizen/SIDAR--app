@@ -2,7 +2,7 @@
   "name": "SIDAR Partes",
   "short_name": "SIDAR",
   "description": "Partes de mantenimiento e instalación SIDAR",
-  "start_url": "./app.html"
+  "start_url": "./"
   "display": "standalone",
   "background_color": "#2A7A82",
   "theme_color": "#3AABB5",
