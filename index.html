@@ -1136,11 +1136,11 @@
       <div class="fila-2">
         <div class="campo">
           <label>Compresor</label>
-          <input type="text" id="compresor-display" placeholder="Auto al poner modelo" style="background:#f0f0f0;font-size:13px" readonly>
+          <id="compresor-display" placeholder="Auto al poner modelo" style="font-size:13px" autocomplete="off">
         </div>
         <div class="campo">
           <label>Programador</label>
-          <input type="text" id="programador-display" placeholder="Auto al poner modelo" style="background:#f0f0f0;font-size:13px" readonly>
+          <id="programador-display" placeholder="Auto al poner modelo" style="font-size:13px" autocomplete="off">
         </div>
       </div>
       <div class="fila-2">
@@ -2270,13 +2270,11 @@ function mostrarBotonesWhatsApp() {
   const cliente = p.cliente || '';
   const tecnicoNombre = p.tecnico || '';
   const telCliente = (p.telCliente || '').replace(/[^0-9+]/g,'');
-  const dirParte = p.dir || '';
-  const mapsLink = dirParte ? `\n🗺️ https://maps.google.com/?q=${encodeURIComponent(dirParte)}` : '';
-
-  const msgSidar = encodeURIComponent(num + ' — ' + cliente + mapsLink + '\n\nAbre el archivo adjunto para ver el parte completo.');
-  const msgCliente2 = encodeURIComponent(num + ' — ' + cliente + '\n\nAbre el archivo adjunto para ver su parte de mantenimiento.');
+  const nombreMant = (p.cliente || '').split(' ')[0] || cliente;
+  const msgCliente2 = encodeURIComponent(`Estimado/a ${nombreMant},\n\nLe confirmamos la realización del servicio técnico de SIDAR del día ${p.fecha || ''}.
+  \n\nAdjuntamos el parte del servicio realizado.\n\nAnte cualquier duda, no dude en contactarnos.\n\nSIDAR`);
   const msgTecnico = encodeURIComponent(num + ' — ' + cliente + '\n\nParte de mantenimiento generado. Abre el archivo adjunto.');
-
+  const msgSidar = encodeURIComponent(num + ' — ' + cliente + '\n\nAbre el archivo adjunto para ver el parte completo.');
   let telFmt = telCliente.replace(/^[+]/,'').replace(/^0034/,'34');
   if (/^[67]/.test(telFmt)) telFmt = '34' + telFmt;
 
@@ -2371,7 +2369,7 @@ async function capturarGPSMant() {
     const lng = pos.coords.longitude.toFixed(6);
     document.getElementById('mant-lat').value = lat;
     document.getElementById('mant-lng').value = lng;
-    result.textContent = `📍 Lat: ${lat}, Lng: ${lng}`;
+    result.innerHTML = `📍 Lat: ${lat}, Lng: ${lng} &nbsp; <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" style="color:var(--azul);font-weight:600;text-decoration:none">🗺️ Navegar</a>`;
     result.style.display = 'block';
     btn.textContent = '✅ GPS capturado';
     btn.style.borderColor = 'var(--azul)';
@@ -3642,7 +3640,7 @@ function enviarPlanEquipoWhatsApp(eqId, eqNombre, tecnicos, clientes, fechaFmt, 
   }
 
   // Encabezado en una sola línea
-  let msg = `📅 *PLANNING | ${diaSemana} ${fechaFmt} | ${eqNombre.toUpperCase()}*\n`;
+  let msg = `*PLANNING | ${diaSemana} ${fechaFmt} | ${eqNombre.toUpperCase()}*\n`;
   msg += `─────────────────\n`;
 
   clientes.forEach((c, i) => {
@@ -3652,9 +3650,9 @@ function enviarPlanEquipoWhatsApp(eqId, eqNombre, tecnicos, clientes, fechaFmt, 
     // ZONA en mayúsculas y negrita + dirección en la misma línea
     const zona = c.zona ? `*${c.zona.toUpperCase()}*` : '';
     const dir = c.dir || 'Sin dirección';
-    msg += `📍 ${zona}${zona && dir ? ' · ' : ''}${dir}\n`;
+    msg += ` ${zona}${zona && dir ? ' · ' : ''}${dir}\n`;
     // Ubicación Google Maps
-    if (c.dir) msg += `🗺️ https://maps.google.com/?q=${encodeURIComponent(c.dir)}\n`;
+    if (c.dir) msg += ` https://maps.google.com/?q=${encodeURIComponent(c.dir)}\n`;
     // Teléfono cliente
     if (c.tel) {
       const telLimpio = c.tel.replace(/[^0-9+]/g,'').replace(/^\+/,'');
@@ -3672,13 +3670,13 @@ function enviarPlanEquipoWhatsApp(eqId, eqNombre, tecnicos, clientes, fechaFmt, 
       msg += depLine + '\n';
     }
     // Observaciones (arqueta, anillos, losas, etc.)
-    if (c.obs) msg += `📝 ${c.obs}\n`;
+    if (c.obs) msg += ` ${c.obs}\n`;
   });
   msg += `\n─────────────────\nSIDAR`;
 
   const EQUIPOS_TEL = {
     'eq1': '34675929606',
-    'eq2': '34675929602',
+    'eq2': '',
     'vitas': '34699248231'
   };
   const tel = EQUIPOS_TEL[eqId] || '';
